@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+
+<canvas id='canvas' width='1000' height='500'></canvas>
+<script> 
+const canvas = document.getElementById('canvas');
+const context = canvas.getContext('2d');
+let score = 0;
+const foo = document.getElementById("score")
+canvas.width = 1000;
+canvas.height = 500;
+const background = new Image();
+background.src = 'https://cdna.artstation.com/p/assets/images/images/006/285/344/large/jeremy-love-pirates5-jeremylove-06.jpg?1497402978';
+context.drawImage(background, 0, 0, canvas.width, canvas.height);
+const heroImg = new Image();
+heroImg.src = 'https://clip2art.com/images/pirates-of-the-caribbean-clipart-vector-10.png'
+const badGuyImg = new Image();
+badGuyImg.src = 'https://images.wikia.com/pirates/images/b/bc/Wiki.png'
+const pearlImg = new Image();
+pearlImg.src = 'https://sh-s7-live-s.legocdn.com/is/image/LEGO/4184?$main$'
+
+const rand = function (num) {
+	return Math.floor((Math.random() * num) + 1);
+};
+
+const dist = function (x, y, x1, y1) {
+	return Math.sqrt((x-x1) * (x-x1) + (y-y1) * (y-y1));
+};
+const pearl = {
+	image: pearlImg,
+	x: rand(canvas.width - 60),
+	y: rand(canvas.height - 45),
+	width: 60,
+	height: 45,
+	draw: function () {
+		context.drawImage(this.image, this.x, this.y, this.width, this.height);
+	},
+	collision: function(obj) {
+		if (Math.abs((obj.x + obj.width)-(this.x + this.width)) < this.width + obj.width && Math.abs(obj.y + obj.height - (this.y + this.height)) < obj.height + this.height) {
+			this.x = rand(canvas.width - this.width);
+			this.y = rand(canvas.height - this.height);
+			score++;
+		}
+	}
+    
+}
+
+
+const createBadGuys = function (count, width, height) {
+	const arr = [];
+	for (let i = 0; i < count; i++) {
+		arr[arr.length] = {
+			x: rand(canvas.width - 45 - 90),
+			y: rand(canvas.height - 45 - 90),
+			width: 45,
+			height: 45,
+			xDelta: rand(8),
+			yDelta: rand(8),
+			image: badGuyImg,
+			draw: function () {
+				context.drawImage(this.image, this.x, this.y, this.width, this.height);
+			},
+			update: function () {
+				if (this.x < 0 || this.x > canvas.width - this. width) {
+					this.xDelta *= (-1);
+				}
+				if (this.y < 0 || this.y > canvas.height - this.height) {
+					this.yDelta *= (-1);
+				}
+				this.x += this.xDelta;
+				this.y += this.yDelta;
+			}
+		}
+	}
+	return arr;
+
+}
+
+const lol = createBadGuys(2, canvas.width, canvas.height);
+const gameData = {
+	badGuy: lol,
+	hero: {
+		x: canvas.width - 55,
+		y: canvas.width - 70,
+		xDelta: 0,
+		yDelta: 0,
+		width: 55,
+		height: 70,
+		dead: false,
+		image: heroImg,
+		draw: function () {
+			context.drawImage(this.image, this.x, this.y, this.width, this.height);
+		},
+		update: function () {
+			console.log(this.x, this.y, this.xDelta, this.yDelta)
+			this.x += this.xDelta;
+			this.y += this.yDelta;
+
+			if (this.x + this.width > canvas.width) {
+				this.x = 0;
+			}
+			else if (this.x < 0){
+				this.x = canvas.width - this.width;
+			}
+			if (this.y < 0) {
+				this.y = canvas.height - this.height;
+			}
+			else if (this.y + this.height > canvas.height) {
+				this.y = 0;
+			}
+			for (let i = 0; i < gameData.badGuy.length; i++) {
+				let obj = gameData.badGuy[i];
+
+				const distance = dist(gameData.hero.x + gameData.hero.width, gameData.hero.y + gameData.hero.height, obj.x + obj.width, obj.y + obj.height)
+				if (distance < gameData.hero.width + obj.width) {
+					gameData.hero.dead = true;
+					alert("GAME OVER!!!1!11")
+				}
+			}
+		}
+	}
+};
+
+
+
+const leftKey = 37;
+const upKey = 38;
+const rightKey = 39;
+const downKey = 40;
+const spaceKey = 32;
+
+document.addEventListener('keydown', function (event){
+	if(event.keyCode === rightKey)
+		gameData.hero.xDelta = 3;
+	if(event.keyCode === leftKey)
+		gameData.hero.xDelta = -3;
+	if(event.keyCode === upKey || event.keyCode === spaceKey)
+		gameData.hero.yDelta = -3;
+	if(event.keyCode === downKey)
+		gameData.hero.yDelta = 3;
+}, false);	
+
+document.addEventListener('keyup', function (event){
+	if(event.keyCode === rightKey || event.keyCode === leftKey)
+		gameData.hero.xDelta = 0;
+	if(event.keyCode === upKey || event.keyCode === spaceKey || event.keyCode === downKey)
+		gameData.hero.yDelta = 0;
+}, false);	
+
+const draw = function () {
+	context.drawImage(background, 0, 0, canvas.width, canvas.height);
+	for (let i = 0; i < gameData.badGuy.length; i++) {
+		gameData.badGuy[i].draw();
+	}
+	pearl.draw();
+	gameData.hero.draw();
+}
+    	
+const update = function () {
+	for (let i = 0; i < gameData.badGuy.length; i++) {
+		gameData.badGuy[i].update();
+	}
+	pearl.collision(gameData.hero);
+	gameData.hero.update();
+}
+const loop = function () {
+	draw();
+	update();
+	if (!gameData.hero.dead)
+		requestAnimationFrame(loop);
+}
+loop();
+
+</script>
+</html>
